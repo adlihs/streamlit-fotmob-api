@@ -77,7 +77,7 @@ mode = st.sidebar.radio("Modo", ["Dataset Builder", "Endpoint Explorer"])
 
 if mode == "Dataset Builder":
     st.header("🏗️ Dataset Builder")
-    st.write("Construye un dataset a partir de un equipo: equipo → plantilla → playerData → historial de partidos.")
+    st.write("Construye un dataset a partir de un equipo: equipo → plantilla → /api/data/playerData?id=...")
 
     with st.form("dataset_form"):
         c1, c2, c3 = st.columns(3)
@@ -88,13 +88,11 @@ if mode == "Dataset Builder":
         with c3:
             max_players = st.number_input("Máximo de jugadores", min_value=1, max_value=100, value=30, step=1)
 
-        c4, c5, c6 = st.columns(3)
+        c4, c5 = st.columns(2)
         with c4:
             include_market = st.checkbox("Incluir market values", value=True)
         with c5:
-            include_matches = st.checkbox("Descargar player matches", value=True)
-        with c6:
-            max_pages = st.number_input("Páginas por jugador", min_value=1, max_value=50, value=5, step=1)
+            delay = st.number_input("Pausa entre jugadores (segundos)", min_value=0.0, max_value=5.0, value=0.25, step=0.05)
 
         build = st.form_submit_button("🚀 Construir dataset", type="primary")
 
@@ -108,9 +106,8 @@ if mode == "Dataset Builder":
                 int(team_id),
                 ccode3=ccode3.strip(),
                 include_market_values=include_market,
-                include_player_matches=include_matches,
                 max_players=int(max_players),
-                max_pages_per_player=int(max_pages),
+                delay=float(delay),
             )
             progress.progress(100, text="Dataset completado")
             st.session_state["dataset"] = dataset
