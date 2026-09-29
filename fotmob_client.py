@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import time
+from urllib.parse import quote
 import requests
 
 BASE_URL = "https://www.fotmob.com"
@@ -18,11 +21,16 @@ class FotMobClient:
         })
 
     def get(self, path, params=None):
+        params = dict(params or {})
+        if "{matchId}" in path:
+            if "matchId" not in params:
+                raise FotMobError("El endpoint heatmap requiere matchId.")
+            path = path.replace("{matchId}", quote(str(params.pop("matchId")), safe=""))
         url = BASE_URL + path
         last_error = None
         for attempt in range(self.retries):
             try:
-                response = self.session.get(url, params=params or {}, timeout=self.timeout)
+                response = self.session.get(url, params=params, timeout=self.timeout)
                 if response.status_code == 429:
                     time.sleep(2 ** attempt)
                     continue
