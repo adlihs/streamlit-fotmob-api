@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import zipfile
 from datetime import date
+import time
 import pandas as pd
 import streamlit as st
 from fotmob_client import FotMobClient, FotMobError
@@ -38,9 +39,9 @@ ENDPOINTS = {
         "id": {"type": "int", "default": 422685, "required": True},
         "includeMarketValues": {"type": "bool", "default": False}}},
     "Player matches": {"path": "/api/data/playerMatches", "params": {
-        "playerId": {"type": "int", "default": 422685, "required": True},
-        "before": {"type": "text", "default": ""},
-        "parentLeagueId": {"type": "int", "default": None}}},
+        "playerId": {"type": "int", "default": 1190867, "required": True},
+        "before": {"type": "int", "default": 0},
+        "parentLeagueId": {"type": "int", "default": 0}}},
     "Match details": {"path": "/api/data/matchDetails", "params": {
         "matchId": {"type": "int", "default": 0, "required": True}}},
     "Live ticker / commentary": {"path": "/api/data/ltc", "params": {
@@ -169,6 +170,65 @@ else:
 
     if execute:
         clean_params = {k: v for k, v in params.items() if v is not None and v != ""}
+
+        # playerMatches is stricter: validate the id with playerData and
+        # provide the pagination/league context expected by FotMob.
+        if endpoint_name == "Player matches":
+            player_id = int(params["playerId"])
+            if player_id <= 0:
+                st.error("playerId debe ser un ID de jugador válido.")
+                st.stop()
+
+            try:
+                with st.spinner("Validando jugador y preparando playerMatches..."):
+                    player_payload = client.get(
+                        "/api/data/playerData",
+                        {"id": player_id, "includeMarketValues": False},
+                    )
+
+                if isinstance(player_payload, dict):
+                    returned_id = player_payload.get("id")
+                    if returned_id is not None and str(returned_id) != str(player_id):
+                        st.error(
+                            f"El ID {player_id} no corresponde al jugador esperado. "
+                            "Usa un player ID de FotMob, no un team ID."
+                        )
+                        st.stop()
+
+                    if not clean_params.get("before"):
+                        clean_params["before"] = int(time.time())
+
+                    if not clean_params.get("parentLeagueId"):
+                        primary_team = player_payload.get("primaryTeam")
+                        inferred_league = None
+                        if isinstance(primary_team, dict):
+                            inferred_league = (
+                                primary_team.get("primaryLeagueId")
+                                or primary_team.get("leagueId")
+                            )
+                        inferred_league = (
+                            inferred_league
+                            or player_payload.get("primaryLeagueId")
+                            or player_payload.get("parentLeagueId")
+                        )
+
+                        if inferred_league:
+                            clean_params["parentLeagueId"] = int(inferred_league)
+                        else:
+                            st.error(
+                                "No pude determinar parentLeagueId automáticamente. "
+                                "Indícalo manualmente en el formulario."
+                            )
+                            st.stop()
+
+            except FotMobError as e:
+                st.error(
+                    f"No se pudo validar playerId={player_id} con playerData. "
+                    "Asegúrate de usar un ID de jugador y no un Team ID. "
+                    f"Detalle: {e}"
+                )
+                st.stop()
+
         try:
             with st.spinner("Consultando FotMob..."):
                 raw = client.get(spec["path"], clean_params)
