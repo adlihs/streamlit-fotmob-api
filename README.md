@@ -8,15 +8,16 @@ Streamlit Data Explorer + Dataset Builder for FotMob internal API endpoints.
 - Dynamic parameter forms and JSON inspection.
 - Automatic conversion of nested record lists into pandas DataFrames.
 - CSV and Parquet export.
-- **Dataset Builder:** team → squad → playerData → playerMatches.
-- Separate relational tables: `team`, `players`, `player_data`, `player_matches`.
+- **Dataset Builder:** team → squad → playerData.
+- Separate relational tables: `team`, `players`, `player_data`.
+- `playerMatches` remains available only in Endpoint Explorer and validates the Player ID via `playerData`; it also supplies `before` and `parentLeagueId` when possible.
 - ZIP export containing CSV and Parquet versions of all generated tables.
 - Retry handling for transient HTTP errors and rate limiting.
 - Heatmap endpoint path parameters are handled automatically.
 
 ## Dataset Builder
 
-Enter a FotMob `teamId`, optionally set `ccode3`, choose the maximum number of players and the number of player-match pages to retrieve.
+Enter a FotMob `teamId`, optionally set `ccode3`, choose the maximum number of players and the market-value option. Player match history is intentionally separate from the Dataset Builder.
 
 Generated tables keep explicit keys for later joins:
 
@@ -25,7 +26,6 @@ Generated tables keep explicit keys for later joins:
 | `team` | `team_id` |
 | `players` | `player_id` |
 | `player_data` | `player_id`, `team_id` |
-| `player_matches` | `player_id`, `team_id` |
 
 The output can be loaded into pandas, Polars, DuckDB or a data warehouse.
 
