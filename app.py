@@ -137,8 +137,8 @@ if mode == "Dataset Builder":
         )
 
         st.caption(
-            "Las tablas están separadas para facilitar análisis en pandas, DuckDB, Polars o un data warehouse. "
-            "Las claves principales son team_id y player_id; player_matches conserva player_id."
+            "El Builder usa /api/data/teams para descubrir la plantilla y /api/data/playerData?id=<player_id> "
+            "para obtener los datos de cada jugador. playerMatches queda disponible únicamente en Endpoint Explorer."
         )
 
 else:
