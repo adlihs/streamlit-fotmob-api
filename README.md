@@ -1,15 +1,33 @@
 # streamlit-fotmob-api
 
-Streamlit Data Explorer for FotMob internal API endpoints.
+Streamlit Data Explorer + Dataset Builder for FotMob internal API endpoints.
 
 ## Features
 
-- Query configured FotMob endpoints.
-- Dynamic parameter forms.
-- JSON response inspection.
+- Query 15 configured FotMob endpoints.
+- Dynamic parameter forms and JSON inspection.
 - Automatic conversion of nested record lists into pandas DataFrames.
 - CSV and Parquet export.
+- **Dataset Builder:** team → squad → playerData → playerMatches.
+- Separate relational tables: `team`, `players`, `player_data`, `player_matches`.
+- ZIP export containing CSV and Parquet versions of all generated tables.
 - Retry handling for transient HTTP errors and rate limiting.
+- Heatmap endpoint path parameters are handled automatically.
+
+## Dataset Builder
+
+Enter a FotMob `teamId`, optionally set `ccode3`, choose the maximum number of players and the number of player-match pages to retrieve.
+
+Generated tables keep explicit keys for later joins:
+
+| Table | Main key |
+|---|---|
+| `team` | `team_id` |
+| `players` | `player_id` |
+| `player_data` | `player_id`, `team_id` |
+| `player_matches` | `player_id`, `team_id` |
+
+The output can be loaded into pandas, Polars, DuckDB or a data warehouse.
 
 ## Run locally
 
